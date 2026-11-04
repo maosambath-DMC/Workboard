@@ -37,6 +37,8 @@ export const WhiteboardHeader: React.FC = () => {
     setActivePersonaId,
     theme,
     toggleTheme,
+    livePeersCount,
+    isLiveConnected,
   } = useWorkspace();
 
   const { currentUser, setIsAuthModalOpen, syncStatus } = useAuth();
@@ -118,6 +120,20 @@ export const WhiteboardHeader: React.FC = () => {
             <span className="text-xs font-bold truncate max-w-[120px] md:max-w-xs">{activeProject?.title}</span>
           </div>
         )}
+
+        {/* Live Server Indicator */}
+        <div 
+          className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-white/90 dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 text-xs font-bold shadow-md backdrop-blur-md"
+          title="Cloud Live Server Active • Instant updates between devices"
+        >
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="text-[11px] text-slate-700 dark:text-slate-200">Live Sync</span>
+          {livePeersCount > 1 && (
+            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-extrabold">
+              {livePeersCount}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Top Right: White Action Strip matching screenshot [ ⏱️  ☑️  🕵️  👆  💼 ] */}

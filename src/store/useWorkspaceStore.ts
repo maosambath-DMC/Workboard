@@ -22,6 +22,13 @@ const channel = typeof window !== 'undefined' && 'BroadcastChannel' in window
   : null;
 
 import { parseShareUrl } from '../lib/share';
+import { 
+  subscribeToLiveBoard, 
+  broadcastLiveItems, 
+  subscribeToLivePresence, 
+  broadcastLiveCursor, 
+  removeLivePresence 
+} from '../lib/liveSync';
 
 const sharedOnLoad = typeof window !== 'undefined' ? parseShareUrl() : null;
 
@@ -265,30 +272,81 @@ export function useWorkspaceStore() {
     };
   }, [activeProjectId, activePersonaId]);
 
+  const [livePeersCount, setLivePeersCount] = useState<number>(1);
+  const [isLiveConnected, setIsLiveConnected] = useState<boolean>(false);
+
+  // Live Room Cloud Subscription (Two-Way Real-Time Live Server Updates)
+  useEffect(() => {
+    if (!activeProjectId || currentView !== 'whiteboard') return;
+
+    setIsLiveConnected(true);
+
+    // 1. Subscribe to real-time whiteboard item updates from other collaborators
+    const unsubBoard = subscribeToLiveBoard(activeProjectId, (remoteItems) => {
+      setItems(remoteItems);
+      setProjects((prev) =>
+        prev.map((p) => (p.id === activeProjectId ? { ...p, items: remoteItems, updatedAt: 'Just now' } : p))
+      );
+    });
+
+    // 2. Subscribe to real-time presence & peer cursors from other devices
+    const unsubPresence = subscribeToLivePresence(activeProjectId, (peers) => {
+      setLivePeersCount(peers.length + 1);
+      if (peers.length > 0) {
+        setPeerCursors((prev) => {
+          const remoteNames = new Set(peers.map((p) => p.personaName));
+          const simulated = prev.filter((c) => !remoteNames.has(c.personaName));
+          return [...simulated, ...peers];
+        });
+      }
+    });
+
+    return () => {
+      if (unsubBoard) unsubBoard();
+      if (unsubPresence) unsubPresence();
+      removeLivePresence(activeProjectId);
+      setIsLiveConnected(false);
+    };
+  }, [activeProjectId, currentView]);
+
   const broadcastItems = useCallback((newItems: CanvasItem[]) => {
-    if (channel && activeProjectId) {
-      channel.postMessage({ type: 'SYNC_ITEMS', projectId: activeProjectId, payload: newItems });
+    if (activeProjectId) {
+      if (channel) {
+        channel.postMessage({ type: 'SYNC_ITEMS', projectId: activeProjectId, payload: newItems });
+      }
+      broadcastLiveItems(activeProjectId, newItems);
     }
     syncItemsToProject(newItems);
   }, [activeProjectId, syncItemsToProject]);
 
   const broadcastCursor = useCallback((x: number, y: number, action?: string) => {
-    if (!channel) return;
     const persona = PERSONAS[activePersonaId];
-    channel.postMessage({
-      type: 'SYNC_CURSOR',
-      payload: {
-        personaId: activePersonaId,
-        personaName: persona.name,
-        avatar: persona.avatar,
-        color: persona.accentHex,
+    if (channel) {
+      channel.postMessage({
+        type: 'SYNC_CURSOR',
+        payload: {
+          personaId: activePersonaId,
+          personaName: persona.name,
+          avatar: persona.avatar,
+          color: persona.accentHex,
+          x,
+          y,
+          activeAction: action,
+          lastActive: Date.now(),
+        },
+      });
+    }
+    if (activeProjectId) {
+      broadcastLiveCursor(activeProjectId, {
         x,
         y,
-        activeAction: action,
-        lastActive: Date.now(),
-      },
-    });
-  }, [activePersonaId]);
+        name: persona.name,
+        avatar: persona.avatar,
+        color: persona.accentHex,
+        personaId: activePersonaId,
+      });
+    }
+  }, [activeProjectId, activePersonaId]);
 
   // Simulated peer cursors (customized per project!)
   useEffect(() => {
@@ -721,11 +779,13 @@ export function useWorkspaceStore() {
       }
     },
 
-    // Peer Cursors
+    // Peer Cursors & Live Cloud Server Status
     peerCursors,
     simulatePeers,
     setSimulatePeers,
     broadcastCursor,
+    livePeersCount,
+    isLiveConnected,
   };
 }
 

@@ -4,8 +4,8 @@ import { db } from './firebase';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 
 /**
- * Generate a shareable URL containing the compressed whiteboard state.
- * This works universally across any device without backend setup.
+ * Generate a shareable URL containing the live room ID and compressed whiteboard state.
+ * Syncs with the Cloud Firestore Live Update Server.
  */
 export function generateShareUrl(project: Project): string {
   try {
@@ -26,9 +26,13 @@ export function generateShareUrl(project: Project): string {
       votingSession: project.votingSession,
     };
 
+    // Save live room state in cloud
+    saveBoardToCloud(project);
+
     const json = JSON.stringify(compactProject);
     const compressed = LZString.compressToEncodedURIComponent(json);
     const url = new URL(window.location.origin);
+    url.searchParams.set('board', project.id);
     url.searchParams.set('share', compressed);
     return url.toString();
   } catch (err) {
@@ -43,15 +47,19 @@ export function generateShareUrl(project: Project): string {
 export function parseShareUrl(): Project | null {
   try {
     const urlParams = new URLSearchParams(window.location.search);
+    const boardId = urlParams.get('board');
     const shareData = urlParams.get('share');
-    if (!shareData) return null;
+    if (!shareData && !boardId) return null;
 
-    const decompressed = LZString.decompressFromEncodedURIComponent(shareData);
-    if (!decompressed) return null;
-
-    const parsed = JSON.parse(decompressed) as Project;
-    if (parsed && parsed.title && Array.isArray(parsed.items)) {
-      return parsed;
+    if (shareData) {
+      const decompressed = LZString.decompressFromEncodedURIComponent(shareData);
+      if (decompressed) {
+        const parsed = JSON.parse(decompressed) as Project;
+        if (parsed && parsed.title && Array.isArray(parsed.items)) {
+          if (boardId) parsed.id = boardId;
+          return parsed;
+        }
+      }
     }
   } catch (err) {
     console.error('Failed to parse share URL:', err);
