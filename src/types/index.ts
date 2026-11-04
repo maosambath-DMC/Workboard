@@ -152,3 +152,13 @@ export interface Project {
   stagedItems: StagedItem[];
   votingSession: VotingSession;
 }
+
+export interface UserAccount {
+  uid: string;
+  email: string;
+  displayName: string;
+  avatar: string;
+  isGuest: boolean;
+  createdAt: number;
+}
+

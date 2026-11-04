@@ -53,7 +53,7 @@ export const Minimap: React.FC<MinimapProps> = ({
   };
 
   return (
-    <div className="absolute bottom-6 right-6 z-20 flex flex-col items-end pointer-events-auto select-none">
+    <div className="hidden md:flex absolute bottom-6 right-6 z-20 flex-col items-end pointer-events-auto select-none">
       <div className="bg-white/90 dark:bg-slate-900/90 rounded-2xl shadow-xl border border-slate-200/80 dark:border-slate-800 backdrop-blur-md overflow-hidden transition-all">
         {/* Minimap Header */}
         <div className="flex items-center justify-between px-3 py-1.5 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-800/40">

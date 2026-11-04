@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useWorkspace } from '../../context/WorkspaceContext';
+import { useAuth } from '../../context/AuthContext';
 import { PERSONA_LIST } from '../../constants/personas';
 import { 
   ArrowLeft, 
@@ -11,7 +12,9 @@ import {
   Sun, 
   Moon, 
   ChevronDown,
-  Sparkles
+  Sparkles,
+  Share2,
+  Cloud
 } from 'lucide-react';
 
 export const WhiteboardHeader: React.FC = () => {
@@ -28,12 +31,15 @@ export const WhiteboardHeader: React.FC = () => {
     setSimulatePeers,
     setIsDecisionMatrixOpen,
     setIsSummaryModalOpen,
+    setIsShareModalOpen,
     activePersona,
     activePersonaId,
     setActivePersonaId,
     theme,
     toggleTheme,
   } = useWorkspace();
+
+  const { currentUser, setIsAuthModalOpen, syncStatus } = useAuth();
 
   const [showPersonaMenu, setShowPersonaMenu] = useState(false);
   const [showToolsMenu, setShowToolsMenu] = useState(false);
@@ -63,28 +69,38 @@ export const WhiteboardHeader: React.FC = () => {
   }, [votingSession, endVotingSession]);
 
   return (
-    <div className="absolute top-5 inset-x-6 z-30 flex items-center justify-between pointer-events-none select-none">
-      {/* Top Left: Back button + Black Voting in Progress Pill matching screenshot */}
-      <div className="flex items-center gap-3 pointer-events-auto">
+    <div className="absolute top-2.5 sm:top-5 inset-x-2 sm:inset-x-6 z-30 flex items-center justify-between pointer-events-none select-none pt-[env(safe-area-inset-top,0px)]">
+      {/* Top Left: Back button + Share Button + Black Voting in Progress Pill */}
+      <div className="flex items-center gap-2 sm:gap-3 pointer-events-auto">
         {/* Back to Projects */}
         <button
           onClick={backToProjects}
-          className="flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-white/90 dark:bg-slate-900/90 hover:bg-white dark:hover:bg-slate-900 text-slate-700 dark:text-slate-200 text-xs font-bold shadow-lg border border-slate-200/80 dark:border-slate-800 backdrop-blur-md transition-all hover:scale-105 active:scale-95"
+          className="flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-2xl bg-white/90 dark:bg-slate-900/90 hover:bg-white dark:hover:bg-slate-900 text-slate-700 dark:text-slate-200 text-xs font-bold shadow-lg border border-slate-200/80 dark:border-slate-800 backdrop-blur-md transition-all hover:scale-105 active:scale-95"
           title="Back to project selection"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Projects</span>
+          <span className="hidden sm:inline">Projects</span>
         </button>
 
-        {/* Voting in Progress Black Pill (Directly matching user screenshot) */}
+        {/* Share Button */}
+        <button
+          onClick={() => setIsShareModalOpen(true)}
+          className="flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white text-xs font-bold shadow-lg shadow-purple-600/20 backdrop-blur-md transition-all hover:scale-105 active:scale-95"
+          title="Share this whiteboard link with others"
+        >
+          <Share2 className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline">Share</span>
+        </button>
+
+        {/* Voting in Progress Black Pill or Project Title */}
         {votingSession.isActive ? (
-          <div className="flex items-center gap-3 px-4 py-2.5 rounded-2xl bg-black text-white shadow-xl backdrop-blur-md border border-white/10 animate-pop-in">
-            <div className="w-5 h-5 rounded-md bg-white text-black flex items-center justify-center text-xs font-black shadow-xs">
+          <div className="flex items-center gap-2 sm:gap-3 px-3 py-1.5 sm:px-4 sm:py-2 rounded-2xl bg-black text-white shadow-xl backdrop-blur-md border border-white/10 animate-pop-in">
+            <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-md bg-white text-black flex items-center justify-center text-xs font-black shadow-xs">
               ✓
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-bold tracking-tight">
-                Voting in progress
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs sm:text-sm font-bold tracking-tight">
+                Voting
               </span>
               {timeLeft && (
                 <span className="text-xs font-mono text-amber-300">
@@ -92,20 +108,20 @@ export const WhiteboardHeader: React.FC = () => {
                 </span>
               )}
             </div>
-            <span className="text-xs text-slate-400 font-medium border-l border-neutral-700 pl-3">
+            <span className="hidden md:inline text-xs text-slate-400 font-medium border-l border-neutral-700 pl-3">
               {votingSession.statusText || '3 participants still voting'}
             </span>
           </div>
         ) : (
-          <div className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/90 dark:bg-slate-900/90 text-slate-800 dark:text-slate-100 shadow-md border border-slate-200/80 dark:border-slate-800 backdrop-blur-md">
+          <div className="hidden sm:flex items-center gap-2 px-3.5 py-1.5 sm:py-2 rounded-2xl bg-white/90 dark:bg-slate-900/90 text-slate-800 dark:text-slate-100 shadow-md border border-slate-200/80 dark:border-slate-800 backdrop-blur-md">
             <span className="text-base">{activeProject?.emoji || '🎯'}</span>
-            <span className="text-xs font-bold">{activeProject?.title}</span>
+            <span className="text-xs font-bold truncate max-w-[120px] md:max-w-xs">{activeProject?.title}</span>
           </div>
         )}
       </div>
 
       {/* Top Right: White Action Strip matching screenshot [ ⏱️  ☑️  🕵️  👆  💼 ] */}
-      <div className="flex items-center gap-2 pointer-events-auto">
+      <div className="flex items-center gap-1.5 sm:gap-2 pointer-events-auto">
         <div className="flex items-center gap-1 p-1.5 rounded-2xl bg-white/95 dark:bg-slate-900/95 shadow-xl border border-slate-200/80 dark:border-slate-800 backdrop-blur-md">
           {/* 1. Timer button */}
           <button
@@ -254,6 +270,23 @@ export const WhiteboardHeader: React.FC = () => {
             </div>
           )}
         </div>
+
+        {/* Account / Cloud Sync Pill */}
+        <button
+          onClick={() => setIsAuthModalOpen(true)}
+          className="flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-2xl bg-white/95 dark:bg-slate-900/95 shadow-xl border border-slate-200/80 dark:border-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold transition-all hover:scale-105 active:scale-95"
+          title={currentUser && !currentUser.isGuest ? `Account: ${currentUser.displayName} • Synced to Cloud` : 'Sign In to Save to Cloud'}
+        >
+          <span className="text-sm leading-none">{currentUser?.avatar || '👤'}</span>
+          <span className="hidden md:inline max-w-[80px] truncate">
+            {currentUser && !currentUser.isGuest ? currentUser.displayName : 'Sign In'}
+          </span>
+          <span 
+            className={`w-2 h-2 rounded-full ${
+              syncStatus === 'synced' ? 'bg-emerald-500' : syncStatus === 'saving' ? 'bg-amber-400 animate-ping' : 'bg-slate-400'
+            }`} 
+          />
+        </button>
 
         {/* Theme Toggle */}
         <button

@@ -17,7 +17,7 @@ interface StickyNoteProps {
   item: CanvasItem;
   isSelected: boolean;
   onSelect: () => void;
-  onDragStart: (e: React.MouseEvent, item: CanvasItem) => void;
+  onDragStart: (e: React.MouseEvent | React.PointerEvent, item: CanvasItem) => void;
 }
 
 export const StickyNote: React.FC<StickyNoteProps> = ({
@@ -95,7 +95,7 @@ export const StickyNote: React.FC<StickyNoteProps> = ({
         e.stopPropagation();
         onSelect();
       }}
-      onMouseDown={(e) => {
+      onPointerDown={(e) => {
         if ((e.target as HTMLElement).closest('button, input, textarea')) return;
         onDragStart(e, item);
       }}
@@ -106,7 +106,7 @@ export const StickyNote: React.FC<StickyNoteProps> = ({
       }}
       className={`absolute top-0 left-0 p-4 shadow-md hover:shadow-xl transition-all cursor-grab active:cursor-grabbing border ${solidColorClass} ${shapeDef.containerClass} text-slate-900 ${
         isSelected ? 'ring-3 ring-purple-600 shadow-2xl scale-[1.01]' : ''
-      } flex flex-col justify-between group select-none relative`}
+      } flex flex-col justify-between group select-none touch-none relative`}
     >
       {/* Green circular vote badge on top-right corner */}
       {voteCount > 0 && (
@@ -135,7 +135,7 @@ export const StickyNote: React.FC<StickyNoteProps> = ({
             )}
           </div>
 
-          <div className="flex items-center gap-0.5 opacity-60 group-hover:opacity-100 transition-opacity">
+          <div className={`flex items-center gap-0.5 transition-opacity ${isSelected ? 'opacity-100' : 'opacity-70 md:opacity-60 md:group-hover:opacity-100'}`}>
             {/* 10 Shape Picker Menu */}
             <div className="relative">
               <button

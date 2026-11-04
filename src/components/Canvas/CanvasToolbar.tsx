@@ -220,7 +220,7 @@ export const CanvasToolbar: React.FC = () => {
   };
 
   return (
-    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 p-1.5 rounded-2xl bg-white/95 dark:bg-slate-900/95 shadow-2xl border border-slate-200/80 dark:border-slate-800 backdrop-blur-lg select-none pointer-events-auto">
+    <div className="absolute bottom-3 sm:bottom-6 left-1/2 -translate-x-1/2 z-20 max-w-[calc(100vw-16px)] overflow-x-auto no-scrollbar flex items-center gap-1 sm:gap-1.5 p-1 sm:p-1.5 rounded-2xl bg-white/95 dark:bg-slate-900/95 shadow-2xl border border-slate-200/80 dark:border-slate-800 backdrop-blur-lg select-none pointer-events-auto pb-[calc(env(safe-area-inset-bottom,0px)+4px)]">
       {/* Hidden File Picker for Instant 1-Click Image Upload */}
       <input
         ref={fileInputRef}
@@ -231,9 +231,9 @@ export const CanvasToolbar: React.FC = () => {
       />
 
       {/* Creation Tools with Drag to Canvas capability */}
-      <div className="flex items-center gap-1 pr-1 border-r border-slate-200 dark:border-slate-800">
+      <div className="flex items-center gap-0.5 sm:gap-1 pr-1 border-r border-slate-200 dark:border-slate-800">
         <div 
-          className="flex items-center pl-1 pr-0.5 text-slate-400 dark:text-slate-500 cursor-help"
+          className="hidden sm:flex items-center pl-1 pr-0.5 text-slate-400 dark:text-slate-500 cursor-help"
           title="Drag any tool onto the canvas or click to add"
         >
           <GripVertical className="w-3.5 h-3.5" />
@@ -245,11 +245,11 @@ export const CanvasToolbar: React.FC = () => {
           onDragStart={(e) => handleToolbarDragStart(e, 'sticky')}
           onDragEnd={handleToolbarDragEnd}
           onClick={handleQuickAddSticky}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all hover:scale-105 active:scale-95 cursor-grab active:cursor-grabbing"
+          className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all hover:scale-105 active:scale-95 cursor-grab active:cursor-grabbing"
           title="Sticky Note • Click or drag onto whiteboard"
         >
           <StickyNote className="w-4 h-4 text-amber-500" strokeWidth={1.75} />
-          <span>Note</span>
+          <span className="hidden sm:inline">Note</span>
         </button>
 
         {/* 2. Text Alone */}
@@ -258,11 +258,11 @@ export const CanvasToolbar: React.FC = () => {
           onDragStart={(e) => handleToolbarDragStart(e, 'text')}
           onDragEnd={handleToolbarDragEnd}
           onClick={handleQuickAddText}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all hover:scale-105 active:scale-95 cursor-grab active:cursor-grabbing"
+          className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all hover:scale-105 active:scale-95 cursor-grab active:cursor-grabbing"
           title="Text Label • Click or drag onto whiteboard"
         >
           <Type className="w-4 h-4 text-purple-600 dark:text-purple-400" strokeWidth={1.75} />
-          <span>Text</span>
+          <span className="hidden sm:inline">Text</span>
         </button>
 
         {/* 3. Image Alone */}
@@ -271,11 +271,11 @@ export const CanvasToolbar: React.FC = () => {
           onDragStart={(e) => handleToolbarDragStart(e, 'image')}
           onDragEnd={handleToolbarDragEnd}
           onClick={() => fileInputRef.current?.click()}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all hover:scale-105 active:scale-95 cursor-grab active:cursor-grabbing"
+          className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all hover:scale-105 active:scale-95 cursor-grab active:cursor-grabbing"
           title="Picture • Click to upload, or drag onto whiteboard"
         >
           <ImageIcon className="w-4 h-4 text-sky-500" strokeWidth={1.75} />
-          <span>Picture</span>
+          <span className="hidden sm:inline">Picture</span>
         </button>
 
         {/* 4. Poll Element */}
@@ -284,11 +284,11 @@ export const CanvasToolbar: React.FC = () => {
           onDragStart={(e) => handleToolbarDragStart(e, 'poll')}
           onDragEnd={handleToolbarDragEnd}
           onClick={handleQuickAddPoll}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all hover:scale-105 active:scale-95 cursor-grab active:cursor-grabbing"
+          className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all hover:scale-105 active:scale-95 cursor-grab active:cursor-grabbing"
           title="Voting Poll • Click or drag onto whiteboard"
         >
           <Vote className="w-4 h-4 text-indigo-500" strokeWidth={1.75} />
-          <span>Poll</span>
+          <span className="hidden sm:inline">Poll</span>
         </button>
 
         {/* 5. Miniboard Element */}
@@ -297,11 +297,11 @@ export const CanvasToolbar: React.FC = () => {
           onDragStart={(e) => handleToolbarDragStart(e, 'miniboard')}
           onDragEnd={handleToolbarDragEnd}
           onClick={handleQuickAddMiniboard}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all hover:scale-105 active:scale-95 cursor-grab active:cursor-grabbing"
+          className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all hover:scale-105 active:scale-95 cursor-grab active:cursor-grabbing"
           title="Miniboard Portal • Click or drag onto whiteboard"
         >
           <Layers className="w-4 h-4 text-pink-500" strokeWidth={1.75} />
-          <span>Miniboard</span>
+          <span className="hidden sm:inline">Miniboard</span>
         </button>
 
         {/* 6. Frame */}
@@ -310,11 +310,11 @@ export const CanvasToolbar: React.FC = () => {
           onDragStart={(e) => handleToolbarDragStart(e, 'frame')}
           onDragEnd={handleToolbarDragEnd}
           onClick={handleAddFrame}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all hover:scale-105 active:scale-95 cursor-grab active:cursor-grabbing"
+          className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all hover:scale-105 active:scale-95 cursor-grab active:cursor-grabbing"
           title="Frame / Section • Click or drag onto whiteboard"
         >
           <Square className="w-4 h-4 text-emerald-500" strokeWidth={1.75} />
-          <span>Frame</span>
+          <span className="hidden sm:inline">Frame</span>
         </button>
       </div>
 
@@ -322,7 +322,7 @@ export const CanvasToolbar: React.FC = () => {
       <div className="pr-1 border-r border-slate-200 dark:border-slate-800">
         <button
           onClick={() => setIsStagingOpen(!isStagingOpen)}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all hover:scale-105 active:scale-95 ${
+          className={`flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-xl text-xs font-bold transition-all hover:scale-105 active:scale-95 ${
             isStagingOpen
               ? 'bg-purple-600 text-white shadow-md'
               : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
@@ -330,7 +330,7 @@ export const CanvasToolbar: React.FC = () => {
           title="Silent Brainstorming / Private Stash Tray"
         >
           <EyeOff className="w-4 h-4" strokeWidth={1.75} />
-          <span>Silent Stash</span>
+          <span className="hidden sm:inline">Silent Stash</span>
           {stagedItems.length > 0 && (
             <span className="px-1.5 py-0.2 rounded-full text-[10px] font-black bg-pink-500 text-white shadow-xs">
               {stagedItems.length}

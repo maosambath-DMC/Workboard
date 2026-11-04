@@ -9,7 +9,7 @@ interface CanvasTextProps {
   item: CanvasItem;
   isSelected: boolean;
   onSelect: () => void;
-  onDragStart: (e: React.MouseEvent, item: CanvasItem) => void;
+  onDragStart: (e: React.MouseEvent | React.PointerEvent, item: CanvasItem) => void;
 }
 
 export const CanvasText: React.FC<CanvasTextProps> = ({
@@ -76,7 +76,7 @@ export const CanvasText: React.FC<CanvasTextProps> = ({
         e.stopPropagation();
         onSelect();
       }}
-      onMouseDown={(e) => {
+      onPointerDown={(e) => {
         if (isEditing) return;
         onDragStart(e, item);
       }}
@@ -85,7 +85,7 @@ export const CanvasText: React.FC<CanvasTextProps> = ({
         width: item.width ? `${item.width}px` : 'auto',
         minWidth: '140px',
       }}
-      className={`absolute top-0 left-0 p-3 transition-all cursor-grab active:cursor-grabbing select-none group ${
+      className={`absolute top-0 left-0 p-3 transition-all cursor-grab active:cursor-grabbing select-none touch-none group ${
         shapeDef ? `${shapeDef.containerClass} ${solidColorClass}` : 'rounded-xl'
       } ${
         isSelected

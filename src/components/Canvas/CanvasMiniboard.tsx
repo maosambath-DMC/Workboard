@@ -13,7 +13,7 @@ interface CanvasMiniboardProps {
   item: CanvasItem;
   isSelected: boolean;
   onSelect: () => void;
-  onDragStart: (e: React.MouseEvent, item: CanvasItem) => void;
+  onDragStart: (e: React.MouseEvent | React.PointerEvent, item: CanvasItem) => void;
 }
 
 export const CanvasMiniboard: React.FC<CanvasMiniboardProps> = ({
@@ -46,7 +46,7 @@ export const CanvasMiniboard: React.FC<CanvasMiniboardProps> = ({
         e.stopPropagation();
         onSelect();
       }}
-      onMouseDown={(e) => {
+      onPointerDown={(e) => {
         if ((e.target as HTMLElement).closest('button')) return;
         onDragStart(e, item);
       }}
@@ -54,7 +54,7 @@ export const CanvasMiniboard: React.FC<CanvasMiniboardProps> = ({
         transform: `translate3d(${item.x}px, ${item.y}px, 0)`,
         width: `${item.width || 280}px`,
       }}
-      className={`absolute top-0 left-0 rounded-3xl p-4 bg-white dark:bg-slate-900 border-2 border-purple-300 dark:border-purple-800 shadow-lg hover:shadow-2xl transition-all cursor-grab active:cursor-grabbing select-none group ${
+      className={`absolute top-0 left-0 rounded-3xl p-4 bg-white dark:bg-slate-900 border-2 border-purple-300 dark:border-purple-800 shadow-lg hover:shadow-2xl transition-all cursor-grab active:cursor-grabbing select-none touch-none group ${
         isSelected ? 'ring-3 ring-purple-600 shadow-2xl scale-[1.02]' : ''
       }`}
     >

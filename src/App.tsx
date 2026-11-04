@@ -1,11 +1,14 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import React, { Component, ErrorInfo, ReactNode, useEffect } from 'react';
 import { WorkspaceProvider, useWorkspace } from './context/WorkspaceContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { ProjectSelectionPage } from './components/Projects/ProjectSelectionPage';
 import { Canvas } from './components/Canvas/Canvas';
 import { StagingTray } from './components/Staging/StagingTray';
 import { NewItemModal } from './components/Modals/NewItemModal';
 import { DecisionMatrixModal } from './components/Modals/DecisionMatrixModal';
 import { ProjectSummaryModal } from './components/Modals/ProjectSummaryModal';
+import { AuthModal } from './components/Auth/AuthModal';
+import { ShareModal } from './components/Share/ShareModal';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -61,31 +64,64 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
 }
 
 export function AppRouter() {
-  const { currentView } = useWorkspace();
+  const { 
+    currentView, 
+    activeProject, 
+    projects, 
+    isShareModalOpen, 
+    setIsShareModalOpen, 
+    importProject 
+  } = useWorkspace();
+  const { currentUser, saveUserDataToCloud } = useAuth();
 
-  if (currentView === 'projects') {
-    return <ProjectSelectionPage />;
-  }
+  // Auto-sync projects to cloud when logged in
+  useEffect(() => {
+    if (currentUser && !currentUser.isGuest && projects.length > 0) {
+      const timeout = setTimeout(() => {
+        saveUserDataToCloud(projects);
+      }, 1500);
+      return () => clearTimeout(timeout);
+    }
+  }, [projects, currentUser, saveUserDataToCloud]);
 
   return (
-    <div className="w-full h-screen overflow-hidden flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200">
-      <main className="flex-1 relative overflow-hidden">
-        <Canvas />
-        <StagingTray />
-      </main>
-      <NewItemModal />
-      <DecisionMatrixModal />
-      <ProjectSummaryModal />
-    </div>
+    <>
+      {currentView === 'projects' ? (
+        <ProjectSelectionPage />
+      ) : (
+        <div className="w-full h-screen overflow-hidden flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200">
+          <main className="flex-1 relative overflow-hidden">
+            <Canvas />
+            <StagingTray />
+          </main>
+          <NewItemModal />
+          <DecisionMatrixModal />
+          <ProjectSummaryModal />
+        </div>
+      )}
+
+      {/* Global Modals */}
+      <AuthModal />
+      {activeProject && (
+        <ShareModal
+          project={activeProject}
+          isOpen={isShareModalOpen}
+          onClose={() => setIsShareModalOpen(false)}
+          onImportProject={importProject}
+        />
+      )}
+    </>
   );
 }
 
 export default function App() {
   return (
     <ErrorBoundary>
-      <WorkspaceProvider>
-        <AppRouter />
-      </WorkspaceProvider>
+      <AuthProvider>
+        <WorkspaceProvider>
+          <AppRouter />
+        </WorkspaceProvider>
+      </AuthProvider>
     </ErrorBoundary>
   );
 }

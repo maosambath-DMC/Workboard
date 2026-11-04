@@ -20,7 +20,7 @@ interface ReferenceCardProps {
   item: CanvasItem;
   isSelected: boolean;
   onSelect: () => void;
-  onDragStart: (e: React.MouseEvent, item: CanvasItem) => void;
+  onDragStart: (e: React.MouseEvent | React.PointerEvent, item: CanvasItem) => void;
 }
 
 export const ReferenceCard: React.FC<ReferenceCardProps> = ({
@@ -87,7 +87,7 @@ export const ReferenceCard: React.FC<ReferenceCardProps> = ({
         e.stopPropagation();
         onSelect();
       }}
-      onMouseDown={(e) => {
+      onPointerDown={(e) => {
         if ((e.target as HTMLElement).closest('button, input, textarea, a')) return;
         onDragStart(e, item);
       }}
@@ -98,7 +98,7 @@ export const ReferenceCard: React.FC<ReferenceCardProps> = ({
       }}
       className={`absolute top-0 left-0 rounded-2xl overflow-hidden shadow-md transition-shadow cursor-grab active:cursor-grabbing border bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 ${
         isSelected ? 'ring-3 ring-purple-500 shadow-xl scale-[1.01]' : 'hover:shadow-lg'
-      } flex flex-col justify-between group select-none`}
+      } flex flex-col justify-between group select-none touch-none`}
     >
       <div>
         {/* Image Preview / Banner */}

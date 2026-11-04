@@ -16,7 +16,7 @@ interface CanvasPollProps {
   item: CanvasItem;
   isSelected: boolean;
   onSelect: () => void;
-  onDragStart: (e: React.MouseEvent, item: CanvasItem) => void;
+  onDragStart: (e: React.MouseEvent | React.PointerEvent, item: CanvasItem) => void;
 }
 
 export const CanvasPoll: React.FC<CanvasPollProps> = ({
@@ -87,7 +87,7 @@ export const CanvasPoll: React.FC<CanvasPollProps> = ({
         e.stopPropagation();
         onSelect();
       }}
-      onMouseDown={(e) => {
+      onPointerDown={(e) => {
         if ((e.target as HTMLElement).closest('button, input, textarea')) return;
         onDragStart(e, item);
       }}
@@ -95,7 +95,7 @@ export const CanvasPoll: React.FC<CanvasPollProps> = ({
         transform: `translate3d(${item.x}px, ${item.y}px, 0)`,
         width: `${item.width || 320}px`,
       }}
-      className={`absolute top-0 left-0 rounded-2xl p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-md hover:shadow-xl transition-shadow cursor-grab active:cursor-grabbing select-none group ${
+      className={`absolute top-0 left-0 rounded-2xl p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-md hover:shadow-xl transition-shadow cursor-grab active:cursor-grabbing select-none touch-none group ${
         isSelected ? 'ring-3 ring-purple-500 shadow-2xl' : ''
       }`}
     >

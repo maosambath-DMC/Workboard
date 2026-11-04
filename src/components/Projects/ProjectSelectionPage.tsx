@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useWorkspace } from '../../context/WorkspaceContext';
 import { PERSONAS, PERSONA_LIST } from '../../constants/personas';
+import { useAuth } from '../../context/AuthContext';
 import { CreateProjectModal } from './CreateProjectModal';
 import { 
   Plus, 
@@ -15,7 +16,9 @@ import {
   Moon, 
   RotateCcw,
   Layers,
-  ChevronDown
+  ChevronDown,
+  Cloud,
+  Share2
 } from 'lucide-react';
 
 export const ProjectSelectionPage: React.FC = () => {
@@ -31,6 +34,8 @@ export const ProjectSelectionPage: React.FC = () => {
     toggleTheme,
     resetAllProjects,
   } = useWorkspace();
+
+  const { currentUser, setIsAuthModalOpen, syncStatus } = useAuth();
 
   const [activeTab, setActiveTab] = useState<'all' | 'voting' | 'decisions'>('all');
   const [showPersonaMenu, setShowPersonaMenu] = useState(false);
@@ -111,6 +116,23 @@ export const ProjectSelectionPage: React.FC = () => {
             )}
           </div>
 
+          {/* Account / Cloud Sync Pill */}
+          <button
+            onClick={() => setIsAuthModalOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700 transition-all text-xs font-bold text-slate-800 dark:text-slate-200"
+            title={currentUser && !currentUser.isGuest ? `Account: ${currentUser.displayName} • Synced` : 'Sign In to Sync'}
+          >
+            <span className="text-sm leading-none">{currentUser?.avatar || '👤'}</span>
+            <span className="hidden sm:inline max-w-[90px] truncate">
+              {currentUser && !currentUser.isGuest ? currentUser.displayName : 'Sign In'}
+            </span>
+            <span 
+              className={`w-2 h-2 rounded-full ${
+                syncStatus === 'synced' ? 'bg-emerald-500' : syncStatus === 'saving' ? 'bg-amber-400 animate-ping' : 'bg-slate-400'
+              }`} 
+            />
+          </button>
+
           {/* Theme Toggle */}
           <button
             onClick={toggleTheme}
@@ -158,7 +180,7 @@ export const ProjectSelectionPage: React.FC = () => {
         </div>
 
         {/* Filter Tabs */}
-        <div className="flex items-center gap-2 pb-6 border-b border-slate-200/80 dark:border-slate-800">
+        <div className="flex items-center gap-2 pb-6 border-b border-slate-200/80 dark:border-slate-800 overflow-x-auto no-scrollbar whitespace-nowrap">
           <button
             onClick={() => setActiveTab('all')}
             className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${

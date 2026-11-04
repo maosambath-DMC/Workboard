@@ -13,6 +13,7 @@ import { CursorsLayer } from './CursorsLayer';
 import { Minimap } from './Minimap';
 import { CanvasToolbar } from './CanvasToolbar';
 import { WhiteboardHeader } from './WhiteboardHeader';
+import { Star, GitBranch, Trash2, X } from 'lucide-react';
 
 export const Canvas: React.FC = () => {
   const {
@@ -20,6 +21,9 @@ export const Canvas: React.FC = () => {
     items,
     addItem,
     moveItem,
+    removeItem,
+    branchItem,
+    toggleVote,
     zoom,
     setZoom,
     panOffset,
@@ -48,6 +52,11 @@ export const Canvas: React.FC = () => {
     panY: 0,
   });
 
+  // Multi-touch pinch tracking for iPhone and iPad
+  const activePointersRef = useRef<Map<number, { x: number; y: number }>>(new Map());
+  const pinchStartDistRef = useRef<number | null>(null);
+  const pinchStartZoomRef = useRef<number>(1);
+
   const [draggedItem, setDraggedItem] = useState<{
     id: string;
     startX: number;
@@ -55,6 +64,17 @@ export const Canvas: React.FC = () => {
     itemX: number;
     itemY: number;
   } | null>(null);
+
+  // Prevent iOS Safari page pinch zooming
+  useEffect(() => {
+    const preventGestures = (e: Event) => e.preventDefault();
+    document.addEventListener('gesturestart', preventGestures);
+    document.addEventListener('gesturechange', preventGestures);
+    return () => {
+      document.removeEventListener('gesturestart', preventGestures);
+      document.removeEventListener('gesturechange', preventGestures);
+    };
+  }, []);
 
   // Wheel zoom handling
   const handleWheel = useCallback(
@@ -491,10 +511,22 @@ export const Canvas: React.FC = () => {
     }
   };
 
-  // Mouse pan handlers
-  const handleMouseDown = (e: React.MouseEvent) => {
+  // Unified Pointer & Touch Pan/Zoom Handlers (supports iPhone, iPad, & Desktop)
+  const handlePointerDown = (e: React.PointerEvent) => {
+    activePointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+    // Multi-touch Pinch to Zoom on iPad / iPhone
+    if (activePointersRef.current.size === 2) {
+      const [p1, p2] = Array.from(activePointersRef.current.values());
+      pinchStartDistRef.current = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+      pinchStartZoomRef.current = zoom;
+      setIsPanning(false);
+      setDraggedItem(null);
+      return;
+    }
+
     if (e.button === 1 || e.button === 0) {
-      if ((e.target as HTMLElement).closest('.canvas-item')) return;
+      if ((e.target as HTMLElement).closest('.canvas-item, button, input, textarea')) return;
 
       setIsPanning(true);
       panStartRef.current = {
@@ -507,12 +539,25 @@ export const Canvas: React.FC = () => {
     }
   };
 
-  const handleMouseMove = (e: React.MouseEvent) => {
+  const handlePointerMove = (e: React.PointerEvent) => {
+    activePointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
     const worldX = (e.clientX - panOffset.x) / zoom;
     const worldY = (e.clientY - panOffset.y) / zoom;
     broadcastCursor(Math.round(worldX), Math.round(worldY));
 
-    if (isPanning) {
+    // 2-Finger Pinch to Zoom (smooth scale around center)
+    if (activePointersRef.current.size === 2 && pinchStartDistRef.current) {
+      const [p1, p2] = Array.from(activePointersRef.current.values());
+      const currentDist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+      const scale = currentDist / pinchStartDistRef.current;
+      const nextZoom = Math.min(2.5, Math.max(0.2, pinchStartZoomRef.current * scale));
+      setZoom(nextZoom);
+      return;
+    }
+
+    // 1-Finger or Mouse Canvas Panning
+    if (isPanning && activePointersRef.current.size === 1) {
       const dx = e.clientX - panStartRef.current.x;
       const dy = e.clientY - panStartRef.current.y;
       setPanOffset({
@@ -522,6 +567,7 @@ export const Canvas: React.FC = () => {
       return;
     }
 
+    // Item Dragging
     if (draggedItem) {
       const dx = (e.clientX - draggedItem.startX) / zoom;
       const dy = (e.clientY - draggedItem.startY) / zoom;
@@ -529,9 +575,15 @@ export const Canvas: React.FC = () => {
     }
   };
 
-  const handleMouseUp = () => {
-    setIsPanning(false);
-    setDraggedItem(null);
+  const handlePointerUp = (e: React.PointerEvent) => {
+    activePointersRef.current.delete(e.pointerId);
+    if (activePointersRef.current.size < 2) {
+      pinchStartDistRef.current = null;
+    }
+    if (activePointersRef.current.size === 0) {
+      setIsPanning(false);
+      setDraggedItem(null);
+    }
   };
 
   // Double click anywhere to quickly drop a text item
@@ -561,7 +613,7 @@ export const Canvas: React.FC = () => {
     });
   };
 
-  const handleItemDragStart = (e: React.MouseEvent, item: CanvasItem) => {
+  const handleItemDragStart = (e: React.MouseEvent | React.PointerEvent, item: CanvasItem) => {
     setDraggedItem({
       id: item.id,
       startX: e.clientX,
@@ -591,6 +643,7 @@ export const Canvas: React.FC = () => {
 
   const frames = filteredItems.filter((i) => i.type === 'frame');
   const nonFrames = filteredItems.filter((i) => i.type !== 'frame');
+  const selectedItem = items.find((i) => i.id === selectedItemId);
 
   const bgClass =
     canvasBackground === 'dots'
@@ -608,15 +661,15 @@ export const Canvas: React.FC = () => {
   return (
     <div
       ref={containerRef}
-      onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseUp}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
       onDoubleClick={handleDoubleClick}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className={`relative w-full h-screen overflow-hidden cursor-default select-none ${bgClass}`}
+      className={`relative w-full h-screen overflow-hidden cursor-default select-none touch-none ${bgClass}`}
     >
       {/* Top Floating Header */}
       <WhiteboardHeader />
@@ -788,6 +841,52 @@ export const Canvas: React.FC = () => {
           kitsune.co
         </div>
       </div>
+
+      {/* Mobile & Touch Floating Action Bar for Selected Item */}
+      {selectedItem && (
+        <div className="absolute bottom-20 sm:bottom-24 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 p-1.5 rounded-2xl bg-black/90 dark:bg-slate-900/95 backdrop-blur-md text-white shadow-2xl border border-white/10 animate-pop-in pointer-events-auto max-w-[90vw]">
+          <span className="text-[11px] font-bold text-slate-300 px-2 truncate max-w-[100px] sm:max-w-[160px]">
+            {selectedItem.title || 'Selected Item'}
+          </span>
+          <div className="h-4 w-px bg-white/20" />
+          <button
+            onClick={() => toggleVote(selectedItem.id)}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold hover:bg-white/15 transition-colors"
+            title="Vote"
+          >
+            <Star className={`w-3.5 h-3.5 ${selectedItem.votes?.includes(activePersonaId) ? 'fill-current text-pink-400' : ''}`} />
+            <span className="text-[11px]">{selectedItem.votes?.length || 0}</span>
+          </button>
+          <button
+            onClick={() => {
+              const label = window.prompt('Enter branch theme or idea:', 'Branch Idea');
+              if (label !== null) branchItem(selectedItem.id, label.trim() || 'Branch');
+            }}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold hover:bg-white/15 transition-colors text-purple-300"
+            title="Branch from this item"
+          >
+            <GitBranch className="w-3.5 h-3.5" />
+            <span className="hidden xs:inline text-[11px]">Branch</span>
+          </button>
+          <button
+            onClick={() => {
+              removeItem(selectedItem.id);
+              setSelectedItemId(null);
+            }}
+            className="p-1.5 rounded-xl text-xs font-bold hover:bg-red-500/20 text-red-400 transition-colors"
+            title="Delete item"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={() => setSelectedItemId(null)}
+            className="p-1 rounded-xl text-slate-400 hover:text-white"
+            title="Close selection"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
 
       {/* Floating Canvas Toolbar */}
       <CanvasToolbar />

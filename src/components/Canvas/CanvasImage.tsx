@@ -8,7 +8,7 @@ interface CanvasImageProps {
   item: CanvasItem;
   isSelected: boolean;
   onSelect: () => void;
-  onDragStart: (e: React.MouseEvent, item: CanvasItem) => void;
+  onDragStart: (e: React.MouseEvent | React.PointerEvent, item: CanvasItem) => void;
 }
 
 export const CanvasImage: React.FC<CanvasImageProps> = ({
@@ -96,7 +96,7 @@ export const CanvasImage: React.FC<CanvasImageProps> = ({
           e.stopPropagation();
           onSelect();
         }}
-        onMouseDown={(e) => {
+        onPointerDown={(e) => {
           if ((e.target as HTMLElement).closest('button, .resize-handle')) return;
           onDragStart(e, item);
         }}
@@ -104,7 +104,7 @@ export const CanvasImage: React.FC<CanvasImageProps> = ({
           transform: `translate3d(${item.x}px, ${item.y}px, 0)`,
           width: `${item.width || 300}px`,
         }}
-        className={`absolute top-0 left-0 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-md hover:shadow-xl transition-shadow cursor-grab active:cursor-grabbing select-none group ${
+        className={`absolute top-0 left-0 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-md hover:shadow-xl transition-shadow cursor-grab active:cursor-grabbing select-none touch-none group ${
           isSelected ? 'ring-3 ring-purple-500 shadow-2xl' : ''
         }`}
       >
@@ -118,7 +118,9 @@ export const CanvasImage: React.FC<CanvasImageProps> = ({
         />
 
         {/* Floating Top Minimalist Action Bar */}
-        <div className="absolute top-2.5 right-2.5 z-20 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-black/60 backdrop-blur-md p-1 rounded-xl text-white">
+        <div className={`absolute top-2.5 right-2.5 z-20 flex items-center gap-1 transition-opacity bg-black/60 backdrop-blur-md p-1 rounded-xl text-white ${
+          isSelected ? 'opacity-100' : 'opacity-0 md:group-hover:opacity-100'
+        }`}>
           <button
             onClick={(e) => {
               e.stopPropagation();

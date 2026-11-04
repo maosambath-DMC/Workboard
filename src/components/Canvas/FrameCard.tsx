@@ -8,7 +8,7 @@ interface FrameCardProps {
   item: CanvasItem;
   isSelected: boolean;
   onSelect: () => void;
-  onDragStart: (e: React.MouseEvent, item: CanvasItem) => void;
+  onDragStart: (e: React.MouseEvent | React.PointerEvent, item: CanvasItem) => void;
 }
 
 export const FrameCard: React.FC<FrameCardProps> = ({
@@ -28,7 +28,7 @@ export const FrameCard: React.FC<FrameCardProps> = ({
         e.stopPropagation();
         onSelect();
       }}
-      onMouseDown={(e) => {
+      onPointerDown={(e) => {
         // Drag only when clicking header bar
         if ((e.target as HTMLElement).closest('.frame-header')) {
           onDragStart(e, item);
@@ -43,7 +43,7 @@ export const FrameCard: React.FC<FrameCardProps> = ({
         colors.border
       } ${colors.darkBorder} bg-slate-50/40 dark:bg-slate-900/30 backdrop-blur-[2px] transition-all ${
         isSelected ? 'ring-2 ring-purple-500 shadow-lg' : ''
-      } select-none pointer-events-auto`}
+      } select-none touch-none pointer-events-auto`}
     >
       {/* Frame Header Bar */}
       <div className="frame-header flex items-center justify-between px-4 py-2.5 rounded-t-3xl bg-white/60 dark:bg-slate-800/60 border-b border-dashed border-slate-200 dark:border-slate-800 cursor-grab active:cursor-grabbing backdrop-blur-md">

@@ -21,6 +21,10 @@ const channel = typeof window !== 'undefined' && 'BroadcastChannel' in window
   ? new BroadcastChannel('kitsune_workspace_channel') 
   : null;
 
+import { parseShareUrl } from '../lib/share';
+
+const sharedOnLoad = typeof window !== 'undefined' ? parseShareUrl() : null;
+
 export function useWorkspaceStore() {
   // Theme state
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
@@ -41,23 +45,37 @@ export function useWorkspaceStore() {
 
   // Projects State
   const [projects, setProjects] = useState<Project[]>(() => {
+    let list: Project[] = INITIAL_PROJECTS;
     try {
       const saved = localStorage.getItem(STORAGE_KEY_PROJECTS);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) list = parsed;
       }
     } catch {
       // ignore
     }
-    return INITIAL_PROJECTS;
+
+    if (sharedOnLoad) {
+      const idx = list.findIndex((p) => p.id === sharedOnLoad.id);
+      if (idx !== -1) {
+        list[idx] = sharedOnLoad;
+      } else {
+        list = [sharedOnLoad, ...list];
+      }
+    }
+    return list;
   });
 
   const safeProjects = Array.isArray(projects) ? projects : INITIAL_PROJECTS;
 
   // Navigation View: 'projects' = Project selection landing page, 'whiteboard' = inside a project
-  const [currentView, setCurrentView] = useState<'projects' | 'whiteboard'>('projects');
-  const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
+  const [currentView, setCurrentView] = useState<'projects' | 'whiteboard'>(
+    sharedOnLoad ? 'whiteboard' : 'projects'
+  );
+  const [activeProjectId, setActiveProjectId] = useState<string | null>(
+    sharedOnLoad ? sharedOnLoad.id : null
+  );
 
   // Active Persona
   const [activePersonaId, setActivePersonaId] = useState<PersonaId>('simon');
@@ -92,6 +110,7 @@ export function useWorkspaceStore() {
   const [isNewItemModalOpen, setIsNewItemModalOpen] = useState<boolean>(false);
   const [newItemParentId, setNewItemParentId] = useState<string | null>(null);
   const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] = useState<boolean>(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState<boolean>(false);
 
   // Multi-user simulated peers & live cursors
   const [peerCursors, setPeerCursors] = useState<PeerCursor[]>([]);
@@ -654,6 +673,19 @@ export function useWorkspaceStore() {
     setNewItemParentId,
     isCreateProjectModalOpen,
     setIsCreateProjectModalOpen,
+    isShareModalOpen,
+    setIsShareModalOpen,
+    importProject: (imported: Project) => {
+      setProjects((prev) => {
+        const exists = prev.some((p) => p.id === imported.id);
+        if (exists) {
+          return prev.map((p) => (p.id === imported.id ? imported : p));
+        }
+        return [imported, ...prev];
+      });
+      setActiveProjectId(imported.id);
+      setCurrentView('whiteboard');
+    },
 
     // Voting Session
     votingSession,
